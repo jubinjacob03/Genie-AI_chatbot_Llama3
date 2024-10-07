@@ -2,6 +2,9 @@ import os
 import json
 import streamlit as st
 from groq import Groq
+from dotenv import load_dotenv
+
+load_dotenv()
 
 st.set_page_config(
     page_title="Genie AI Chat",
@@ -9,25 +12,14 @@ st.set_page_config(
     layout="centered"
 )
 
-working_dir = os.path.dirname(os.path.abspath(__file__))
-config_data = {}
-
-try:
-    with open(f"{working_dir}/config.json") as config_file:
-        config_data = json.load(config_file)
-except FileNotFoundError:
-    st.warning("config.json not found. Using environment variables instead.")
-
-
-GROQ_API_KEY = config_data.get("GROQ_API_KEY", os.getenv("GROQ_API_KEY"))
+GROQ_API_KEY = os.getenv("GROQ_API_KEY")
 
 if not GROQ_API_KEY:
-    st.error("GROQ_API_KEY not set. Please set it in config.json or as an environment variable.")
+    st.error("GROQ_API_KEY not set. Please set it in the .env file.")
 else:
     os.environ["GROQ_API_KEY"] = GROQ_API_KEY
 
 client = Groq()
-
 
 if "chat_history" not in st.session_state:
     st.session_state.chat_history = []
@@ -48,7 +40,7 @@ st.markdown(
             padding: 2rem;
         }
         h1 {
-            color: #673ab7; /* Deep purple */
+            color: #673ab7; 
             font-size: 3rem;
             text-align: center;
             margin-bottom: 1rem;
@@ -74,7 +66,7 @@ st.markdown(
             align-self: flex-end;
         }
         .assistant {
-            background-color: #673ab7; /* Deep purple */
+            background-color: #673ab7; 
             color: white;
             align-self: flex-start;
         }
@@ -88,7 +80,6 @@ st.markdown(
 
 st.title("🧞‍♂️ Genie AI")
 
-
 with st.container():
     st.markdown('<div class="chat-container">', unsafe_allow_html=True)
 
@@ -100,20 +91,16 @@ with st.container():
 
     st.markdown('</div>', unsafe_allow_html=True)
 
-
 user_prompt = st.chat_input("Ask Genie...")
 
 if user_prompt:
-
     st.markdown(f'<div class="message user">{user_prompt}</div>', unsafe_allow_html=True)
     st.session_state.chat_history.append({"role": "user", "content": user_prompt})
-
 
     messages = [
         {"role": "system", "content": "You are a helpful assistant with a genie theme"},
         *st.session_state.chat_history
     ]
-
 
     response = client.chat.completions.create(
         model="llama-3.1-8b-instant",
@@ -122,6 +109,5 @@ if user_prompt:
 
     assistant_response = response.choices[0].message.content
     st.session_state.chat_history.append({"role": "assistant", "content": assistant_response})
-
 
     st.markdown(f'<div class="message assistant">{assistant_response}</div>', unsafe_allow_html=True)
