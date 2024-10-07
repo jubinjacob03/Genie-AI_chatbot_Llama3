@@ -10,13 +10,24 @@ st.set_page_config(
 )
 
 working_dir = os.path.dirname(os.path.abspath(__file__))
-config_data = json.load(open(f"{working_dir}/config.json"))
+config_data = {}
 
-GROQ_API_KEY = config_data["GROQ_API_KEY"]
+try:
+    with open(f"{working_dir}/config.json") as config_file:
+        config_data = json.load(config_file)
+except FileNotFoundError:
+    st.warning("config.json not found. Using environment variables instead.")
 
-os.environ["GROQ_API_KEY"] = GROQ_API_KEY
+
+GROQ_API_KEY = config_data.get("GROQ_API_KEY", os.getenv("GROQ_API_KEY"))
+
+if not GROQ_API_KEY:
+    st.error("GROQ_API_KEY not set. Please set it in config.json or as an environment variable.")
+else:
+    os.environ["GROQ_API_KEY"] = GROQ_API_KEY
 
 client = Groq()
+
 
 if "chat_history" not in st.session_state:
     st.session_state.chat_history = []
@@ -75,7 +86,6 @@ st.markdown(
     unsafe_allow_html=True
 )
 
-
 st.title("🧞‍♂️ Genie AI")
 
 
@@ -103,6 +113,7 @@ if user_prompt:
         {"role": "system", "content": "You are a helpful assistant with a genie theme"},
         *st.session_state.chat_history
     ]
+
 
     response = client.chat.completions.create(
         model="llama-3.1-8b-instant",
