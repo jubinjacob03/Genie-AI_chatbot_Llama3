@@ -8,9 +8,51 @@ load_dotenv()
 
 st.set_page_config(
     page_title="Genie AI Chat",
-    page_icon="🧞‍♂️",
+    page_icon="🪄",
     layout="centered"
 )
+
+# Load the Poppins font and dark background
+st.markdown("""
+    <style>
+    @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap');
+    * {
+        font-family: 'Poppins', sans-serif;
+        color: white;
+    }
+    body {
+        background-color: #1b1b1d;
+    }
+    .main-title {
+        text-align: center;
+        font-size: 3em;
+        margin-top: 20px;
+    }
+    .prompt-buttons {
+        display: flex;
+        justify-content: center;
+        gap: 10px;
+        margin-top: 30px;
+    }
+    .prompt-button {
+        padding: 15px 20px;
+        border-radius: 5px;
+        background-color: #444;
+        color: white;
+        text-align: center;
+        cursor: pointer;
+    }
+    .stTextInput > div > div > input {
+        background-color: #333;
+        color: white;
+        border-radius: 20px;
+    }
+    .stButton button {
+        background-color: #444;
+        color: white;
+    }
+    </style>
+""", unsafe_allow_html=True)
 
 GROQ_API_KEY = os.getenv("GROQ_API_KEY")
 
@@ -21,80 +63,34 @@ else:
 
 client = Groq()
 
+# Chat history session state
 if "chat_history" not in st.session_state:
     st.session_state.chat_history = []
 
-st.markdown(
-    """
-    <style>
-        body {
-            background-color: #f4f4f4;
-            color: #333;
-            font-family: 'Roboto', sans-serif;
-        }
-        .main {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            padding: 2rem;
-        }
-        h1 {
-            color: #673ab7; 
-            font-size: 3rem;
-            text-align: center;
-            margin-bottom: 1rem;
-        }
-        .chat-container {
-            width: 100%;
-            max-width: 600px;
-            border-radius: 8px;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-            background-color: white;
-            overflow: hidden;
-            margin-bottom: 2rem;
-        }
-        .message {
-            border-radius: 8px;
-            padding: 10px;
-            margin: 5px 0;
-            transition: background-color 0.3s ease, color 0.3s ease;
-        }
-        .user {
-            background-color: #ffbb33;
-            color: #222;
-            align-self: flex-end;
-        }
-        .assistant {
-            background-color: #673ab7; 
-            color: white;
-            align-self: flex-start;
-        }
-        .stChatInput {
-            margin-top: 1rem;
-        }
-    </style>
-    """,
-    unsafe_allow_html=True
-)
+# Title and Image
+st.markdown('<div class="main-title">Genie AI 🪄</div>', unsafe_allow_html=True)
+st.image("genie.png", width=120)
 
-st.title("🧞‍♂️ Genie AI")
+# Quick Start Prompts
+st.markdown("""
+    <div class="prompt-buttons">
+        <div class="prompt-button" onclick="document.getElementById('prompt_input').value='Make up a story';">Make up a story</div>
+        <div class="prompt-button" onclick="document.getElementById('prompt_input').value='Create a morning routine';">Create a morning routine</div>
+        <div class="prompt-button" onclick="document.getElementById('prompt_input').value='Quiz me on world capitals';">Quiz me on world capitals</div>
+        <div class="prompt-button" onclick="document.getElementById('prompt_input').value='Plan a mental health day';">Plan a mental health day</div>
+    </div>
+""", unsafe_allow_html=True)
 
-with st.container():
-    st.markdown('<div class="chat-container">', unsafe_allow_html=True)
+# Display chat history
+for message in st.session_state.chat_history:
+    with st.chat_message(message["role"]):
+        st.markdown(message["content"])
 
-    for message in st.session_state.chat_history:
-        if message["role"] == "user":
-            st.markdown(f'<div class="message user">{message["content"]}</div>', unsafe_allow_html=True)
-        else:
-            st.markdown(f'<div class="message assistant">{message["content"]}</div>', unsafe_allow_html=True)
+# Chat Input
+user_prompt = st.text_input("Ask Genie...", key="prompt_input")
 
-    st.markdown('</div>', unsafe_allow_html=True)
-
-user_prompt = st.chat_input("Ask Genie...")
-
+# Handle user input
 if user_prompt:
-    st.markdown(f'<div class="message user">{user_prompt}</div>', unsafe_allow_html=True)
     st.session_state.chat_history.append({"role": "user", "content": user_prompt})
 
     messages = [
@@ -110,4 +106,5 @@ if user_prompt:
     assistant_response = response.choices[0].message.content
     st.session_state.chat_history.append({"role": "assistant", "content": assistant_response})
 
-    st.markdown(f'<div class="message assistant">{assistant_response}</div>', unsafe_allow_html=True)
+    with st.chat_message("assistant"):
+        st.markdown(assistant_response)
