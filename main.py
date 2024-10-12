@@ -3,6 +3,9 @@ import streamlit as st
 from groq import Groq
 from dotenv import load_dotenv
 from address import get_current_ip, is_allowed_to_prompt
+import logging
+
+logging.basicConfig(level=logging.INFO)
 
 load_dotenv()
 
@@ -79,7 +82,11 @@ if not GROQ_API_KEY:
 else:
     os.environ["GROQ_API_KEY"] = GROQ_API_KEY
 
-client = Groq()
+try:
+    client = Groq()
+except Exception as e:
+    logging.error(f"Failed to create Groq client: {e}")
+    st.error("Unable to connect to the Groq service. Please try again later.")
 
 if "chat_history" not in st.session_state:
     st.session_state.chat_history = []
@@ -98,10 +105,8 @@ button_labels = [
 
 cols = st.columns(len(button_labels))
 
-
 def set_prompt(prompt):
     st.session_state.prompt_input = prompt
-
 
 for col, label in zip(cols, button_labels):
     with col:
@@ -114,7 +119,6 @@ for message in st.session_state.chat_history:
 user_prompt = st.text_input(" ", key="prompt_input",
                             placeholder=" Ask Genie...")
 
-
 if user_prompt:
     current_ip = get_current_ip()
 
@@ -126,39 +130,43 @@ if user_prompt:
 
             messages = [
                 {"role": "system",
-                    "content": "You are a helpful assistant with a genie theme"},
+                 "content": "You are a helpful assistant with a genie theme"},
                 *st.session_state.chat_history
             ]
 
-            response = client.chat.completions.create(
-                model="llama-3.1-8b-instant",
-                messages=messages
-            )
+            try:
+                response = client.chat.completions.create(
+                    model="llama-3.1-8b-instant",
+                    messages=messages
+                )
 
-            assistant_response = response.choices[0].message.content
-            st.session_state.chat_history.append(
-                {"role": "assistant", "content": assistant_response}
-            )
+                assistant_response = response.choices[0].message.content
+                st.session_state.chat_history.append(
+                    {"role": "assistant", "content": assistant_response}
+                )
 
-            with st.chat_message("assistant"):
-                response_div = f"""
-                <div class="response-container">
-                    <span id="response_text">{assistant_response}</span>
-                    <button class="copy-button" onclick="copyToClipboard()">
-                        Copy
-                    </button>
-                    <script>
-                        function copyToClipboard() {{
-                            const responseText = document.getElementById('response_text').innerText;
-                            navigator.clipboard.writeText(responseText);
-                        }}
-                    </script>
-                </div>
-                """
-                st.markdown(response_div, unsafe_allow_html=True)
+                with st.chat_message("assistant"):
+                    response_div = f"""
+                    <div class="response-container">
+                        <span id="response_text">{assistant_response}</span>
+                        <button class="copy-button" onclick="copyToClipboard()">
+                            Copy
+                        </button>
+                        <script>
+                            function copyToClipboard() {{
+                                const responseText = document.getElementById('response_text').innerText;
+                                navigator.clipboard.writeText(responseText);
+                            }}
+                        </script>
+                    </div>
+                    """
+                    st.markdown(response_div, unsafe_allow_html=True)
+            except Exception as e:
+                logging.error(f"Error during API request: {e}")
+                st.error("An error occurred while processing your request. Please try again.")
         else:
             st.error(
-                "Prompt limit reached. Please wait for the cooldown period to reset.")
+                "Free prompt limit reached. Please wait for the cooldown period (20 days) to reset.")
     else:
         st.error(
             "Could not retrieve your IP address. Please check your network connection.")
