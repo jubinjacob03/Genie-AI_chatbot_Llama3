@@ -3,15 +3,17 @@ import streamlit as st
 from groq import Groq
 from dotenv import load_dotenv
 
+# Load environment variables from .env file
 load_dotenv()
 
+# Set up Streamlit page configuration
 st.set_page_config(
     page_title="Genie AI Chat",
     page_icon="🪄",
     layout="centered"
 )
 
-# Load the Poppins font and dark background
+# Load custom CSS for styling
 st.markdown("""
     <style>
     @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap');
@@ -27,12 +29,6 @@ st.markdown("""
         font-size: 3em;
         margin-top: 20px;
     }
-    .prompt-buttons {
-        display: flex;
-        justify-content: center;
-        gap: 10px;
-        margin-top: 30px;
-    }
     .prompt-button {
         padding: 15px 20px;
         border-radius: 5px;
@@ -40,11 +36,11 @@ st.markdown("""
         color: white;
         text-align: center;
         cursor: pointer;
+        width: 100%;  /* Make buttons fill their column */
     }
     .stTextInput > div > div > input {
         background-color: #333;
         color: white;
-        border-radius: 20px;
     }
     .stButton button {
         background-color: #444;
@@ -68,9 +64,6 @@ st.markdown("""
         padding: 5px 10px;
         cursor: pointer;
         font-size: 0.9em;
-        display: flex;
-        align-items: center;
-        gap: 5px;
     }
     .copy-button:hover {
         background-color: #FFB300;
@@ -82,6 +75,7 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
+# Retrieve API key from environment variables
 GROQ_API_KEY = os.getenv("GROQ_API_KEY")
 
 if not GROQ_API_KEY:
@@ -91,23 +85,34 @@ else:
 
 client = Groq()
 
-# Chat history session state
+# Initialize chat history in session state if not present
 if "chat_history" not in st.session_state:
     st.session_state.chat_history = []
+if "prompt_input" not in st.session_state:
+    st.session_state.prompt_input = ""
 
 # Title and Image
 st.markdown('<div class="main-title">Genie AI 🪄</div>', unsafe_allow_html=True)
 st.image("genie.png", width=120)
 
-# Quick Start Prompts
-st.markdown("""
-    <div class="prompt-buttons">
-        <div class="prompt-button" onclick="document.getElementById('prompt_input').value='Make up a story';">Make up a story</div>
-        <div class="prompt-button" onclick="document.getElementById('prompt_input').value='Create a morning routine';">Create a morning routine</div>
-        <div class="prompt-button" onclick="document.getElementById('prompt_input').value='Quiz me on world capitals';">Quiz me on world capitals</div>
-        <div class="prompt-button" onclick="document.getElementById('prompt_input').value='Plan a mental health day';">Plan a mental health day</div>
-    </div>
-""", unsafe_allow_html=True)
+# Quick Start Prompts using columns for horizontal layout
+button_labels = [
+    'Tell me an interesting fact',
+    'Create a morning routine',
+    'Quiz me on world capitals',
+    'Tell me a fairy tale story'
+]
+
+# Create as many columns as there are buttons
+cols = st.columns(len(button_labels))
+
+# Define a function to set the prompt input when a button is clicked
+def set_prompt(prompt):
+    st.session_state.prompt_input = prompt
+
+for col, label in zip(cols, button_labels):
+    with col:
+        st.button(label, on_click=lambda l=label: set_prompt(l))
 
 # Display chat history
 for message in st.session_state.chat_history:
@@ -115,7 +120,7 @@ for message in st.session_state.chat_history:
         st.markdown(message["content"])
 
 # Chat Input
-user_prompt = st.text_input("Ask Genie...", key="prompt_input")
+user_prompt = st.text_input(" ", key="prompt_input", placeholder=" Ask Genie...")
 
 # Handle user input
 if user_prompt:
@@ -142,17 +147,15 @@ if user_prompt:
         <div class="response-container">
             <span id="response_text">{assistant_response}</span>
             <button class="copy-button" onclick="copyToClipboard()">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" class="icon-sm">
-                    <path fill-rule="evenodd" clip-rule="evenodd" d="M7 5C7 3.34315 8.34315 2 10 2H19C20.6569 2 22 3.34315 22 5V14C22 15.6569 20.6569 17 19 17H17V19C17 20.6569 15.6569 22 14 22H5C3.34315 22 2 20.6569 2 19V10C2 8.34315 3.34315 7 5 7H7V5ZM9 7H14C15.6569 7 17 8.34315 17 10V15H19C19.5523 15 20 14.5523 20 14V5C20 4.44772 19.5523 4 19 4H10C9.44772 4 9 4.44772 9 5V7ZM5 9C4.44772 9 4 9.44772 4 10V19C4 19.5523 4.44772 20 5 20H14C14.5523 20 15 19.5523 15 19V10C15 9.44772 14.5523 9 14 9H5Z" fill="currentColor"></path>
-                </svg>
                 Copy
             </button>
-        </div>
-        <script>
-            function copyToClipboard() {{
-                const responseText = document.getElementById('response_text').innerText;
-                navigator.clipboard.writeText(responseText);
-            }}
-        </script>
-        """
+            <script>
+                function copyToClipboard() {{
+                    const responseText = document.getElementById('response_text').innerText;
+                    navigator.clipboard.writeText(responseText);
+                }}
+            </script>
+            </div>
+            """
+
         st.markdown(response_div, unsafe_allow_html=True)
