@@ -45,11 +45,9 @@ def is_allowed_to_prompt(ip):
         last_prompt_time = datetime.fromisoformat(ip_info["last_prompt"])
 
         if current_time - last_prompt_time > timedelta(days=20):
-            data[ip]["total_prompts"] = 0
-            data[ip]["last_prompt"] = current_time.isoformat()
+            data[ip] = {"total_prompts": 1, "last_prompt": current_time.isoformat()}
             save_ip_data(data)
             return True
-
         elif prompt_count < 10:
             data[ip]["total_prompts"] += 1
             data[ip]["last_prompt"] = current_time.isoformat()
