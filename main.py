@@ -32,47 +32,50 @@ st.markdown("""
     }
     .prompt-button {
         padding: 15px 20px;
-        border-radius: 5px;
+        border-radius: 18px;
         background-color: #444;
         color: white;
         text-align: center;
         cursor: pointer;
         width: 100%;
+        transition: background-color 0.2s ease-in-out;
     }
+    .prompt-button:hover {
+        background-color: #555;
+    }
+    .stTextInput > div {
+            border-radius: 18px;}
+
+    .stTextInput > div > div {
+            border-radius: 18px;}
     .stTextInput > div > div > input {
         background-color: #333;
         color: white;
+        padding: 10px;
+        border: 1px solid #444;
+        border-radius: 18px;
     }
     .stButton button {
         background-color: #444;
         color: white;
+        border-radius: 18px;
+        transition: background-color 0.2s ease-in-out;
+    }
+    .stButton button:hover {
+        background-color: #555;
     }
     .response-container {
         position: relative;
         padding: 20px;
         background-color: #222;
-        border-radius: 5px;
-        margin-top: 10px;
-    }
-    .copy-button {
-        position: absolute;
-        top: 10px;
-        right: 10px;
-        background-color: #FFC107;
-        color: black;
-        border: none;
-        border-radius: 5px;
-        padding: 5px 10px;
-        cursor: pointer;
-        font-size: 0.9em;
-    }
-    .copy-button:hover {
-        background-color: #FFB300;
+        border-radius: 18px;
+        margin-top: 15px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
     }
     #response_text {
         margin-bottom: 10px;
-        margin-top: 40px;
-     }
+        margin-top: 20px;
+    }
     </style>
 """, unsafe_allow_html=True)
 
@@ -105,8 +108,10 @@ button_labels = [
 
 cols = st.columns(len(button_labels))
 
+
 def set_prompt(prompt):
     st.session_state.prompt_input = prompt
+
 
 for col, label in zip(cols, button_labels):
     with col:
@@ -149,21 +154,13 @@ if user_prompt:
                     response_div = f"""
                     <div class="response-container">
                         <span id="response_text">{assistant_response}</span>
-                        <button class="copy-button" onclick="copyToClipboard()">
-                            Copy
-                        </button>
-                        <script>
-                            function copyToClipboard() {{
-                                const responseText = document.getElementById('response_text').innerText;
-                                navigator.clipboard.writeText(responseText);
-                            }}
-                        </script>
                     </div>
                     """
                     st.markdown(response_div, unsafe_allow_html=True)
             except Exception as e:
                 logging.error(f"Error during API request: {e}")
-                st.error("An error occurred while processing your request. Please try again.")
+                st.error(
+                    "An error occurred while processing your request. Please try again.")
         else:
             st.error(
                 "Free prompt limit reached. Please wait for the cooldown period (20 days) to reset.")
