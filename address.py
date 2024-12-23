@@ -48,7 +48,7 @@ def is_allowed_to_prompt(ip):
             data[ip] = {"total_prompts": 1, "last_prompt": current_time.isoformat()}
             save_ip_data(data)
             return True
-        elif prompt_count < 10:
+        elif prompt_count < 20:
             data[ip]["total_prompts"] += 1
             data[ip]["last_prompt"] = current_time.isoformat()
             save_ip_data(data)
